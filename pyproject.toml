@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "Development Methodologies Afternotes"
+version = "0.0.1"
+description = "Afternotes for M.Sc. Course Development Methodologies."
+authors = ["PayThePizzo <872966@stud.unive.it>"]
+readme = "README.md"
+keywords = ["software architecture"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+poetry = "1.8.5"
+pydantic = "^2.11.5"
+pyyaml = "^6.0.2"
+argparse = "^1.4.0"
+
+
+[tool.poetry.group.test.dependencies]
+
+
+[tool.poetry.group.lint.dependencies]
+flake8 = "^7.1.1"
+flake8-docstrings = "^1.7.0"
+flake8-bugbear = "^24.8.19"
+flake8-comprehensions = "^3.15.0"
+flake8-bandit = "^4.1.1"
+flake8-simplify = "^0.21.0"
+flake8-warnings = "^0.4.1"
+flake8-clean-block = "^0.1.2"
+flake8-literal = "^1.4.0"
+flake8-quotes = "^3.4.0"
+flake8-functions-names = "^0.4.0"
+flake8-variables-names = "^0.0.6"
+flake8-functions = "^0.0.8"
+flake8-docstring-checker = "^1.2"
+black = "^24.10.0"
+
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.6.1"
+mkdocs-dracula-theme = "^1.0.9"
+mkdocstrings = "^1.0.3"
+mkdocstrings-python = "^2.0.3"
+mkdocs-mermaid2-plugin = "^1.2.3"
+mkdocs-panzoom-plugin = "^0.5.2"
+mkdocs-video = "^1.5.0"
+mkdocs-autorefs = "^1.4.4"
+mkdocs-macros-plugin = "^1.5.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+dependencies = [
+    "mkdocstrings-python",
+]
