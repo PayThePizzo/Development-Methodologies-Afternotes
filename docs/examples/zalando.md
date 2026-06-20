@@ -2,6 +2,8 @@
 
 Zalando, a leading European e-commerce platform, implemented a Data Mesh architecture to address challenges in scaling its data operations. The company needed to manage vast amounts of data across multiple domains, including logistics, customer experience, marketing, and inventory management
 
+Zalando
+
 ```mermaid
 flowchart TB
     subgraph "Frontend Layer"
