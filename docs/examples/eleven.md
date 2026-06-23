@@ -29,154 +29,8 @@ Assumptions
 
 ```mermaid
 flowchart TB
-    Sensors[Charging Station Sensors]
+    Sensors[Station Sensors]
 
-    subgraph FE[Front End Layer]
-        App[Mobile App]
-        StationApp[Station Interface]
-        WebApp[Web App]
-    end
-
-    subgraph API[API Gateway Layer]
-        LoadBal[Load Balancer]
-        APIGateway[API Gateway]
-    end
-
-    subgraph Microservices[Microservices Layer]
-        EnergyServ[Energy Usage Service]
-        Payment[Payment Service]
-        AuthServ[Authentication Service]
-        CRMServ[CRM Service]
-        ChargeServ[Charging Services]
-    end
-
-    subgraph CloudLayer[Cloud Layer]
-        IoTCore[IoT Core]
-        EnergyUsageDB[Energy Usage DB]
-        Alert[Alert System]
-    end
-
-    subgraph EdgeComputing[Edge Computing]
-        IoTGateway[Charging Station IoT Gateway]
-        EdgeComputer[Edge Computer]
-        FailAnalysis[Predictive Model\nFailure Analysis]
-    end
-
-    subgraph DataLayer[Data Layer]
-        UserDB[(User Data)]
-        AnayticsDB[(Analytics DB)]
-    end
-
-    subgraph Security[Security Layer]
-        Enc[Encryption]
-        Auth[Authentication]
-    end
-
-
-    App & StationApp & WebApp --> API
-    LoadBal --> APIGateway
-    API --> Microservices
-    AuthServ --> Auth
-    Microservices --> DataLayer
-    EnergyUsageDB --> Alert
-    EnergyUsageDB --> EnergyServ
-
-    IoTCore --> EnergyUsageDB
-    Sensors --> IoTGateway
-    IoTGateway --> EdgeComputer
-    EdgeComputer --> FailAnalysis
-    FailAnalysis --> IoTCore
-```
-
----
-
-## Attempt 1 - Gemini
-
-```mermaid
-flowchart TB
-    Sensors[Charging Station Sensors]
-
-    subgraph FE[Front End Layer]
-        App[Mobile App]
-        StationApp[Station Interface]
-        WebApp[Web App]
-    end
-
-    subgraph API[API Gateway Layer]
-        LoadBal[Load Balancer]
-        APIGateway[API Gateway]
-    end
-
-    subgraph Microservices[Microservices Layer]
-        AuthServ[Authentication Service]
-        ChargeServ[Charging Session Service]
-        Payment[Payment Service]
-        EnergyServ[Energy Usage Service]
-        CRMServ[CRM & Contract Service]
-    end
-
-    subgraph Security[Security Layer]
-        Enc[Encryption]
-        Auth[Authentication / AuthZ]
-    end
-
-    subgraph EdgeComputing[Edge Computing / Station]
-        IoTGateway[Charging Station IoT Gateway]
-        EdgeComputer[Edge Computer]
-        FailAnalysis[Predictive Model\nFailure Analysis]
-    end
-
-    subgraph CloudLayer[Cloud Layer]
-        IoTCore[IoT Core]
-        EnergyUsageDB[(Energy Usage DB)]
-        Alert[Alert System]
-    end
-
-    subgraph DataLayer[Data Layer]
-        UserDB[(User Data & Contracts)]
-        AnalyticsDB[(Analytics DB)]
-    end
-
-    %% Front End to API Gateway Connections
-    App & StationApp & WebApp --> LoadBal
-    LoadBal --> APIGateway
-
-    %% App to Station Interaction (Assumption: local connection for payment/session initiation)
-    App -.->|Local Auth / Sync| StationApp
-
-    %% API Gateway to Microservices
-    APIGateway --> AuthServ
-    APIGateway --> ChargeServ
-    APIGateway --> Payment
-    APIGateway --> EnergyServ
-    APIGateway --> CRMServ
-
-    %% Microservices to Security Layer
-    AuthServ --> Auth
-    ChargeServ & Payment & CRMServ --> Enc
-
-    %% Microservices to Data Layers
-    AuthServ & CRMServ & Payment --> UserDB
-    ChargeServ --> AnalyticsDB
-    EnergyUsageDB --> EnergyServ
-
-    %% IoT & Edge Telemetry Data Flow
-    Sensors --> IoTGateway
-    IoTGateway --> EdgeComputer
-    EdgeComputer --> FailAnalysis
-    FailAnalysis --> IoTCore
-    
-    %% Cloud Processing & Storage
-    IoTCore --> EnergyUsageDB
-    IoTCore --> AnalyticsDB
-    EnergyUsageDB --> Alert
-    Alert -.->|System Monitoring Streams| WebApp
-```
-
-## Attempt 2 - Gemini
-
-```mermaid
-flowchart TB
     subgraph FE[Front End Layer]
         App[Mobile App\nPrivate / Business / Admin]
         StationApp[Station Interface\nOn-Site Sync]
@@ -194,6 +48,7 @@ flowchart TB
         PayServ[Payment Service]
         EnergyServ[Energy Usage Service]
         CRMServ[CRM & Contract Service]
+        AlertMonitorServ[Alert & Monitor Service]
     end
 
     subgraph CacheLayer[Caching Layer]
@@ -201,16 +56,26 @@ flowchart TB
     end
 
     subgraph EdgeLayer[Edge Computing / Stations]
-        Sensors[Station Sensors] --> IoTGe[Station IoT Gateway]
-        IoTGe --> EdgeComp[Edge Computer\nPredictive Failure ML]
+        IoTGe[Station IoT Gateway]
+        IoTGe --> EdgeComp[Edge Computer]
+        EdgeComp --> PredFail[Predictive Failure ML]
     end
 
     subgraph CloudData[Cloud Processing & Data Layer]
         IoTCore[IoT Core Hub]
         TSDB[(Time-Series DB\nEnergy Usage & Telemetry)]
         CoreDB[(Transactional DB\nUsers & Contracts)]
+        
         Alerts[Alert System]
     end
+
+    subgraph AsyncMessage[Async Message Layer]
+        Kafka[[Kafka Event Bus\nTelemetry & App Events]]
+    end
+
+    %% Sensors
+    Sensors --> IoTGe
+
 
     %% Interactions & Edge cases
     App -.->|Local App-to-Station Auth| StationApp
@@ -223,6 +88,7 @@ flowchart TB
     APIG --> PayServ
     APIG --> EnergyServ
     APIG --> CRMServ
+    APIG --> AlertMonitorServ
 
     %% Cache and Fast In-Memory State Paths
     AuthServ & ChargeServ <--> RedisCache
@@ -230,14 +96,19 @@ flowchart TB
     %% Storage Mapping
     AuthServ & CRMServ & PayServ --> CoreDB
     EnergyServ --> TSDB
+    ChargeServ --> TSDB
 
     %% IoT Telemetry Stream Loop
-    EdgeComp -->|MQTT/Telemetry Streams| IoTCore
+    PredFail -->|MQTT/Telemetry Streams| IoTCore
     IoTCore --> TSDB
     TSDB --> Alerts
-    Alerts -.->|Real-time Status Feeds| WebApp
+    Alerts --> Kafka --> AlertMonitorServ
 ```
 
 Perfect, missing
-* Kafka for async communication (monitoring)
+* Sensors must be outside Edge Computing, in a dedicated module for stations
+* Decouple Edge Computing and Predictive Model Failure ML Pipeline
+* Alert System becomes Alert and Monitoring System. Then, connect it to a Kafka Communication Module. Connect this module to a NEW Monitor Service in Microservice
+* Add separate Data Layer (for Transactions and User Info) or Assume Full-Cloud Solution and rename layer to Cloud and Data Layer
+* Assume charging sessions data goes to time series db
 * Security layer (encryption, authentication)
