@@ -51,6 +51,10 @@ Cost per player: about $0.01 per player per day
 on cloud infrastructure, depending on global
 demand
 
+--- 
+
+## Fortnite - Gemini 1
+
 ```mermaid
 graph TB
     subgraph Clients ["Cross-Platform Client Layer"]
@@ -117,3 +121,83 @@ graph TB
     class K8s_Backend,Auth,Matchmaker,ProfileService,Monetization k8sStyle;
     class Storage_Data,Cache,DB,Kafka,DataLake dataStyle;
 ```
+
+---
+
+## Fortnite - Gemini 2
+
+If the case study were adapted for Fortnite using the architectural specifications and metrics detailed in lecture-11-devmet-services-integration-part-4.pdf, the system must pivot from an IoT sensor polling model to a massively scaled, ultra-low-latency game backend capable of handling millions of concurrent connections.
+
+Based explicitly on the engineering realities outlined in your slides (e.g., 30,000+ WebSocket messages per second, 2TB+ of daily log data, and multi-platform SaaS authentication), here is how that high-level Mermaid diagram evolves to pass an architectural exam.
+
+```mermaid
+flowchart TB
+    subgraph Clients[Client Layer & Static Delivery]
+        PC[PC Client]
+        Console[Console Client\nPlayStation / Xbox / Switch]
+        Mobile[Mobile Client]
+        CDN[Global Content Delivery Network\n2PB+ Monthly Textures & Patches]
+    end
+
+    subgraph Edge[Edge & API Routing Layer]
+        LB[Load Balancer]
+        APIG[API Gateway\nEdge Validation & Token Routing]
+        SaaSAuth[[SaaS Identity Providers\nOAuth2: Google / PSN Live / Xbox]]
+    end
+
+    subgraph K8s[Compute Layer - Kubernetes Cluster]
+        AuthServ[Auth & Session Service]
+        MatchServ[AWS GameLift / Matchmaking]
+        ProfileServ[Player Profile & Inventory]
+        GameState[Authoritative Game State Service]
+        PayServ[SaaS Payment Service\nMicrotransactions]
+        LogServ[Ingestion & Analytics Service]
+    end
+
+    subgraph Broker[Asynchronous Messaging Bus]
+        Kafka[[Kafka Event Bus\nHigh-Throughput Telemetry Pipeline]]
+    end
+
+    subgraph Storage[Distributed Storage Layer]
+        Redis[(Redis\nIn-Memory Transient State Cache)]
+        NoSQL[(NoSQL DB\nPlayer Profiles & Inventories)]
+        GlobalSQL[(Distributed SQL\nRelational Financial Ledger)]
+    end
+
+    %% Asset Delivery Path
+    CDN -.->|Static Asset Ingestion| PC & Console & Mobile
+
+    %% Client Communication Channels
+    PC & Console & Mobile -->|Real-Time WebSockets\n30k+ msgs/sec per instance| GameState
+    PC & Console & Mobile -->|HTTPS REST API Calls| LB
+    LB --> APIG
+
+    %% Identity & Gateway Integrations
+    APIG <-->|Federated OAuth2 Handshake| SaaSAuth
+    APIG --> AuthServ
+    APIG --> MatchServ
+    APIG --> ProfileServ
+    APIG --> PayServ
+
+    %% Inter-Service Operations & State Tracking
+    MatchServ -->|gRPC: Provision Session| GameState
+    GameState <--> Redis
+    ProfileServ --> NoSQL
+    PayServ --> GlobalSQL
+
+    %% 2TB+ Telemetry & Logging Stream
+    GameState & ProfileServ & PayServ -->|Emit Game Events| Kafka
+    Kafka --> LogServ
+```
+
+### Component Matrix & Architectural Justifications
+
+* **Cross-Platform Asset Delivery Layer:** Unlike charging stations, games depend heavily on multi-gigabyte client-side rendering engine downloads. A global **CDN layer** handling over 2PB of monthly traffic offloads heavy binary transfers entirely from the core microservices.
+* **Federated Edge Authentication:** To support cross-platform progression across PC, console, and mobile clients seamlessly, the **API Gateway** integrates directly with external **SaaS identity solutions** (Google, PSN, Xbox Live) via OAuth2.
+* **Dual-Protocol Splitting:**
+* **Synchronous REST APIs:** Used for non-time-critical requests (store browsing, reading player inventories, account settings).
+* **Persistent WebSockets/UDP Pipelines:** Bypasses standard routing algorithms entirely to sync game state data directly with an authoritative server at a strict 20–50ms latency margin.
+
+
+* **In-Memory Architecture Shifting:** Instead of utilizing traditional SQL databases for dynamic data, an intensive multi-player backend maps core state components strictly into an **In-Memory Cluster (Redis)** to handle thousands of operations per second without write locking.
+* **The 2TB+ Event Pipe (Kafka):** Telemetry flows continuously from running match instances. Direct database storage would instantly trigger bottlenecks; instead, events push straight into **Kafka** before batch-processing routines securely move archival data onto analytics warehouses.

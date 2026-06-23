@@ -49,3 +49,25 @@ flow between these components and permit the implementation of the entire offeri
 “Case Study Overview” paragraph).
 Evaluate what you can do with ERP legacy system which permits limited possibilities for
 integrations.
+
+---
+
+```mermaid
+flowchart TB
+    subgraph ESB[ESB]
+        DB1[(Customer Records)]
+    end
+
+    WMS
+
+    subgraph CRM[CRM]
+        DB2[(Customer Records)]
+    end
+
+    subgraph Logistics[Logistics]
+    end
+
+    ESB <-->|CSV| WMS
+    ESB <--> CRM
+    WMS <--> Logistics
+```
