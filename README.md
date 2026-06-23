@@ -17,6 +17,7 @@ Resources
   - [ ] ETL (Extract, Transform, Load)
 - [ ] Testing
   - [ ] Maven (Java)
+  - [ ] Nexus
   - [ ] JUnit (Java, Unit Testing)
   - [ ] React Testing Library (Js)
   - [ ] JEST (Js)

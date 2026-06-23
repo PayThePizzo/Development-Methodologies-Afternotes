@@ -26,3 +26,4 @@ can also impact error rate.
 Example: Payment platforms like PayPal monitor error
 rates meticulously, as high error rates could lead to
 transaction failures
+

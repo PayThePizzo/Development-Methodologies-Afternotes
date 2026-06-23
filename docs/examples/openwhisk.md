@@ -1,5 +1,7 @@
 # OpenWhisk
 
+Serverless
+
 https://openwhisk.apache.org/
 Open Source, distributed Serverless Cloud
 Platform that executes functions in response
